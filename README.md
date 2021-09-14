@@ -6,7 +6,7 @@ I made use of a supervised machine learning approach. I provided the ground trut
 
 More on all this can be seen in my [video](https://www.youtube.com/channel/UCV3IJuY11hfmjDomu6rEWTg) on YouTube.
 
-## Description
+## Description/Usage
 
 This repository contains everything that is needed for building an AI that plays Subway Surfers.
 With the provided scripts you can...
@@ -25,41 +25,3 @@ Also...
 [![Thumbnail](media/thumb6.png)](https://youtu.be/W6qyRbmr_aA)
 
 ![AI during training](media/training.gif)
-
-## How to use
-
-1. For starting the game:
-```
-py icyAI.py
-```
-2. Choose a screen-size (large is recommended, others might change physics of the game)
-
-3. Simply navigate through the menu:
-    * PLAY - play for yourself
-    * TRAIN AI - train a new AI and specify how many generations
-    * LET AI PLAY - choose a trained model and let the AI play and specify how many runs
-    * HUMAN VS. AI - choose a trained model and play against this trained AI
-![menu](media/menu2.png)
-      
-4. Enjoy the game and music, play around with the configuration file, experiment with parameters, analyze the statistics, speed up the simulation
-
-Fitness Stats             |  Speciation Stats       |  Neural Network
-:-------------------------:|:-------------------------:|:-------------------------:
-![](media/TRAINING_PROCESS_avg_fitness50.png)  |  ![](media/TRAINING_PROCESS_speciation50.png)  |  ![](media/NN.png)
-
-## Requirements and modules
-
-- python 3
-- pygame
-- pickle
-- neat
-- sys
-- os
-- numpy
-- tkinter
-- random
-- glob
-- visualize
-- re
-- shutil
-- time
