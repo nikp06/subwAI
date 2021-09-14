@@ -1,8 +1,8 @@
 ## About subwAI
 
-*subwAI* - a project for creating an AI that plays the endless runner Subway Surfers.
+*subwAI* - a project for training an AI to play the endless runner Subway Surfers using a supervised machine learning approach by imitation and a convolutional neural network (CNN) for image classification.
 
-I made use of a supervised machine learning approach. I provided the ground truth data by playing the game and saving images with the corresponding action that was taken during the respective frame (jump, roll, left, right, noop) and in order for the AI to best imitate my playing style I used a convolutional neural network (CNN) with several layers (convolution, average pooling, dense layer, dropout, output), which gave me a good accuracy of 85% for it's predictions. After augmenting the data (mirroring, which resulted in a dataset twice as big) the model seemed to give even more robust results, when letting it play the game. Ultimately the model managed to many runs of over a minute and it safely handles the usual obstacles seen in the game. Moreover, the AI - with it's unconvential behavior - discovered a game-changing glitch.
+For this project, I made use of a supervised machine learning approach. I provided the ground truth data by playing the game and saving images with the corresponding action that was taken during the respective frame (jump, roll, left, right, noop) and in order for the AI to best imitate my playing style I used a convolutional neural network (CNN) with several layers (convolution, average pooling, dense layer, dropout, output), which gave me a good accuracy of 85% for it's predictions. After augmenting the data (mirroring, which resulted in a dataset twice as big) the model seemed to give even more robust results, when letting it play the game. Ultimately the model managed to many runs of over a minute and it safely handles the usual obstacles seen in the game. Moreover, the AI - with it's unconvential behavior - discovered a game-changing glitch.
 
 More on all this can be seen in my [video](https://www.youtube.com/channel/UCV3IJuY11hfmjDomu6rEWTg) on YouTube.
 
