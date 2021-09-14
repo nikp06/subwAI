@@ -1,105 +1,242 @@
 from game import Game
 import os
+import time
 import cv2
 import numpy as np
 import sys
-
+from joblib import dump, load
+import visualkeras
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression, Perceptron
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
-EPOCHS = 10
-IMG_WIDTH = 120
-IMG_HEIGHT = 120
+EPOCHS = 20
+if len(sys.argv) > 3:
+    IMG_WIDTH = int(sys.argv[-1])
+    IMG_HEIGHT = int(sys.argv[-1])
+else:
+    IMG_WIDTH = 96
+    IMG_HEIGHT = 96
 NUM_CATEGORIES = 5
 TEST_SIZE = 0.3
 
-PATH_TO_IMAGES = 'images\\training'
+PATH_TO_IMAGES = 'images\\training2'
 ACTIONS2IDX = {
     'left': 0,
     'right': 1,
     'up': 2,
     'down': 3,
-    'noop': 4
+    'noop': 4,
+    'left_flipped': 1,
+    'right_flipped': 0,
+    'up_flipped': 2,
+    'down_flipped': 3,
+    'noop_flipped': 4
 }
 
 
 def main():
     # Check command-line arguments
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         sys.exit("Usage: py ai.py gather/train/play")
 
-    if sys.argv[-1] == 'train':
+    if sys.argv[1] == 'train':
         train_on_data()
-    elif sys.argv[-1] == 'gather':
+    elif sys.argv[1] == 'gather':
         gather_training_data()
-    elif sys.argv[-1] == 'play':
+    elif sys.argv[1] == 'play':
         let_ai_play()
 
 
 def train_on_data():
     # Get image arrays and labels for all image files
-    images, labels = load_data()
+    # if len(sys.argv) > 2:
+    #     if sys.argv[2] == 'load':
+    #         images = np.load('images.npy')
+    #         labels = np.load('labels.npy')
+    # else:
+    pixels, images, labels = load_data()
+    #     np.save('images.npy', np.array(images))
+    #     np.save('labels.npy', np.array(labels))
 
-    # Split data into training and testing sets
-    print(labels)
     labels = tf.keras.utils.to_categorical(labels)
-    x_train, x_test, y_train, y_test = train_test_split(
-        np.array(images), np.array(labels), test_size=TEST_SIZE
-    )
+    # Split data into training and testing sets
+    labels_nr = np.argmax(labels, axis=1).reshape((labels.shape[0], ))
 
-    # Get a compiled neural network
-    model = get_model()
+    # models = [KNeighborsClassifier(n_neighbors=5), GaussianNB(), Perceptron(), tf.keras.models.Sequential()]
+    models = [tf.keras.models.Sequential()]
+    accuracies = []
+    for classifier in models:
+        filename = os.path.join('models', type(classifier).__name__)
+        if type(classifier).__name__ == 'Sequential':
+            # Get a compiled neural network
+            model = get_model()
+            visualkeras.layered_view(model, to_file=os.path.join('models', 'Sequential', 'architecture.png')).show()
 
-    # Fit model on training data
-    model.fit(x_train, y_train, epochs=EPOCHS)
+            # Split data into training and testing sets
+            x_train, x_test, y_train, y_test = train_test_split(np.array(images), np.array(labels), test_size=TEST_SIZE)
 
-    # Evaluate neural network performance
-    model.evaluate(x_test,  y_test, verbose=2)
+            # Fit model on training data
+            model.fit(x_train, y_train, epochs=EPOCHS)
 
-    # Save model to file
-    filename = 'model'
-    model.save(filename)
-    print(f"Model saved to {filename}.")
+            # Evaluate neural network performance
+            metrics = model.evaluate(x_test,  y_test, verbose=2)
+
+            # Make predictions on the testing set
+            predictions = model.predict(x_test)
+            predictions = np.argmax(predictions, axis=1).reshape((predictions.shape[0], ))
+            y_test = np.argmax(y_test, axis=1).reshape((y_test.shape[0], ))
+
+            # Save model to file
+            model.save(filename)
+            print(f"Model saved to {filename}.")
+            print(model.summary())
+
+            # log to text file
+            with open(os.path.join('models', 'report.txt'), 'a') as fh:
+                # Pass the file handle in as a lambda function to make it callable
+                model.summary(line_length=100, print_fn=lambda x: fh.write(x + '\n'))
+                fh.write('Epochs: ' + str(EPOCHS) + '\n')
+                fh.write('Accuracy: ' + str(metrics[1]) + '% | Loss: ' + str(metrics[0]) + '\n\n')
+                for i in range(7):
+                    try:
+                        layer_config = model.get_layer(index=i).get_config()
+                        fh.write('Layer ' + str(i) + ' config: ' + str(layer_config)+'\n')
+                    except:
+                        break
+                fh.write('\n')
+            model_path = os.path.join('models', 'Sequential', 'model_'+str(round(metrics[1], 2)*100)+'.png')
+            tf.keras.utils.plot_model(model, to_file=model_path, show_shapes=True, show_layer_names=True)
+
+        else:
+            model = classifier
+
+            x_train, x_test, y_train, y_test = train_test_split(pixels, np.array(labels_nr), test_size=TEST_SIZE)
+
+            # Fit model on training data
+            model.fit(x_train, y_train)
+            
+            # Make predictions on the testing set
+            predictions = model.predict(x_test)
+
+            # save model
+            dump(model, filename + '.joblib')
+            print(f"Model saved to {filename}.")
+
+        # Compute how well we performed
+        correct = (y_test == predictions).sum()
+        incorrect = (y_test != predictions).sum()
+        total = len(predictions)
+
+        # Print results
+        print(f"Results for model {type(model).__name__}")
+        print(f"Correct: {correct}")
+        print(f"Incorrect: {incorrect}")
+        print(f"Accuracy: {100 * correct / total:.2f}%")
+
+        accuracies.append(100 * correct / total)
+
+    print(accuracies)
 
 
 def gather_training_data():
     game = Game()
+    game.disable_wifi()
     game.start_game()
     frame = None
-
+    counter = 0
     while True:
+        # start_time = time.time()
         while game.game_active:
+            if game.intro:
+                game.intro = (game.last_time - game.game_start) < 1.5
+            # if counter % 4 == 0:
+                # print("--- %s seconds ---" % (time.time() - start_time))
+                # start_time = time.time()
+            counter += 1
             key = game.listen()
             frame = game.get_next_state(key, last_frame=frame)
+            game.timer()
         game.check_game_state()
 
 
 def let_ai_play():
-    # TODO: how to have one actions perform nothing
     game = Game()
-    game.model = tf.keras.models.load_model('model')
-    print(game.model.summary())
+    game.disable_wifi()
+    # [KNeighborsClassifier(n_neighbors=5), tf.keras.models.Sequential(), GaussianNB(), Perceptron()]
+    model = tf.keras.models.Sequential()
+    path = os.path.join('models', type(model).__name__+'_whole_set')
+
+    if type(model).__name__ == 'Sequential':
+        game.NN = True
+        game.model = tf.keras.models.load_model(path)
+        print(game.model.summary())
+    else:
+        game.model = load(path + '.joblib')
+        game.NN = False
 
     game.start_game()
     frame = None
     key = None
+    last_action = None
+    jump = False
+    jump_start = 0
 
     while True:
         while game.game_active:
+            if game.intro:
+                game.intro = (game.last_time - game.game_start) < 1.5
+            #     print(game.last_time - game.game_start)
+            # print(game.intro)
             frame = game.get_next_state(key, frame)
-            predictions = game.get_prediction(frame)
-            # print(predictions)
-            score = tf.nn.softmax(predictions[0])  # get logits
+            # start_time = time.time()
+            predictions, cap = game.get_prediction(frame)
+
+            if game.NN:
+                # score = tf.nn.softmax(predictions[0])  # get logits
+                action = game.actions[np.argmax(predictions)]   # if np.amax(predictions) > 0.7 else 'noop'
+            else:
+                action = game.actions[predictions[0]]
+
             # if round(max(predictions[0]), 2) > 0.98:
-            action = game.actions[np.argmax(score)]
+
             # else:
             #     action = None
-            print(action)
-            game.take_action(action)
+            # if action == 'left' or action == 'right':
+            if last_action != action:
+                if action == 'down' and jump:
+                    action = 'noop'
+                elif action == 'left' and last_action == 'right' or action == 'right' and last_action == 'left':
+                    action = 'noop'
+                else:
+                    game.take_action(action)
+                if action == 'up' and jump is False:
+                    jump = True
+                    jump_start = time.time()
+                if jump and (game.last_time-jump_start) > 1:
+                    jump = False
+                    
+                # print("--- %s seconds ---" % (time.time() - start_time))
+                # if action != 'noop':
+                #     print("{} with {:.2f} percent certainty" .format(action, 100 * np.max(score)))
+            last_action = action if action == 'left' or action == 'right' else 'noop'
+
             # print("This image most likely belongs to {} with a {:.2f} percent confidence.\n"
             #       .format(action, 100 * np.max(score)))
 
+            game.screen_cap(cap, action)
+            game.last_time = time.time()
+            
+            # game.timer()
+
         game.check_game_state()
+
+
+# def timer():
+#     return time.time()
 
 
 def load_data():
@@ -116,19 +253,55 @@ def load_data():
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    images = []
-    labels = []
+    if len(sys.argv) > 2:
+        if sys.argv[2] == 'load':
+            images = np.load(os.path.join('dataset_preloaded', 'images'+str(IMG_WIDTH)+'.npy'))
+            labels = np.load(os.path.join('dataset_preloaded', 'labels'+str(IMG_WIDTH)+'.npy'))
+            pixels = np.load(os.path.join('dataset_preloaded', 'pixels'+str(IMG_WIDTH)+'.npy'))
 
-    for folder in os.listdir(PATH_TO_IMAGES):
-        folder_path = os.path.join(PATH_TO_IMAGES, str(folder))
-        for image in os.listdir(folder_path):
-            # reading image as an array
-            im = cv2.imread(os.path.join(folder_path, image), cv2.IMREAD_COLOR)
-            # resizing image to make input comparable
-            im = cv2.resize(im, (IMG_WIDTH, IMG_HEIGHT), interpolation=cv2.INTER_CUBIC)
-            images.append(im)
-            labels.append(ACTIONS2IDX[str(folder)])
-    return images, labels
+            return pixels, images, labels
+    else:
+        images = []
+        labels = []
+
+        counts = [0, 0, 0, 0, 0]
+        
+        folders = ['down', 'down_flipped', 'up', 'up_flipped', 'left', 'right_flipped',
+                   'right', 'left_flipped', 'noop', 'noop_flipped']
+        
+        min_images = len(os.listdir(os.path.join(PATH_TO_IMAGES, 'down')))*2
+        
+        for folder in folders:
+            folder_path = os.path.join(PATH_TO_IMAGES, str(folder))
+            
+            counter = 0
+            print(folder)
+            for image in os.listdir(folder_path):
+                # for equally sized classes (same amount as down class which has least images
+                if counts[ACTIONS2IDX[folder]] == min_images:
+                    print("limit reached")
+                    break
+                counts[ACTIONS2IDX[folder]] += 1
+                counter += 1
+                # reading image as an array
+                im = cv2.imread(os.path.join(folder_path, image), cv2.IMREAD_COLOR)
+                # resizing image to make input comparable
+                im = cv2.resize(im, (IMG_WIDTH, IMG_HEIGHT), interpolation=cv2.INTER_AREA)
+                images.append(im)
+                labels.append(ACTIONS2IDX[str(folder)])
+        
+        print(counts)
+        
+        # for image in images:
+        x_data = np.array([np.array(image) for image in images])
+
+        pixels = x_data.flatten().reshape(int(len(images)), int(x_data.size/len(images)))
+
+        np.save(os.path.join('dataset_preloaded', 'images'+str(IMG_WIDTH)+'.npy'), np.array(images))
+        np.save(os.path.join('dataset_preloaded', 'labels'+str(IMG_WIDTH)+'.npy'), np.array(labels))
+        np.save(os.path.join('dataset_preloaded', 'pixels'+str(IMG_WIDTH)+'.npy'), np.array(pixels))
+
+        return pixels, images, labels
 
 
 def get_model():
@@ -137,6 +310,7 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
+    # TF IMPLEMENTATION
     # make sequential model
     # passing it as input a list of all the layers that we want to add instead of just adding them one after the other
     model = tf.keras.models.Sequential([
@@ -172,7 +346,7 @@ def get_model():
         # -> learn 32 diff filters with 3x3 kernels each
         # -> input shape is this case is dimensions of the images (in banknotes we had 4 different inputs)
         tf.keras.layers.Conv2D(
-            32, (3, 3), activation="relu", input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)
+            32, (3, 3), activation="tanh", input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)
         ),
 
         # 2. pooling layer
@@ -180,10 +354,10 @@ def get_model():
         tf.keras.layers.AveragePooling2D(pool_size=(2, 2)),
 
         # additional step of convolution and pooling
-        # tf.keras.layers.Conv2D(
-        #     32, (3, 3), activation="sigmoid", input_shape=(14, 14, 32)
-        # ),
-        # tf.keras.layers.AveragePooling2D(pool_size=(2, 2)),
+        tf.keras.layers.Conv2D(
+            16, (3, 3), activation="tanh"  # input_shape=(31, 31, 32)
+        ),
+        tf.keras.layers.AveragePooling2D(pool_size=(2, 2)),
 
         # 3. Flatten units
         tf.keras.layers.Flatten(),
@@ -199,9 +373,27 @@ def get_model():
         # -> lastly add an output layer with output units for all 43 different roadsigns
         # -> softmax takes output and turns it into a probability distribution
         tf.keras.layers.Dense(128, activation="relu"),
-        # tf.keras.layers.Dropout(0.2),
+        # tf.keras.layers.Dense(128, activation="relu"),
+        tf.keras.layers.Dropout(0.3),
+        # tf.keras.layers.Dense(128, activation="relu"),
+        # tf.keras.layers.Dropout(0.3),
+
+        # has to be softmax apparently
         tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
     ])
+
+    # KERAS IMPLEMENTATION
+    # input_shape = (IMG_HEIGHT, IMG_WIDTH, 3)
+    # img_input = k.Input(shape=input_shape)
+    # conv1 = layers.Conv2D(32, (3, 3), activation='sigmoid', input_shape=input_shape)(img_input)
+    # pool1 = layers.AveragePooling2D(pool_size=(3, 3))(conv1)
+    # conv2 = layers.Conv2D(16, (2, 2), activation='sigmoid')(pool1)
+    # pool2 = layers.AveragePooling2D(pool_size=(2, 2))(conv2)
+    # flat1 = layers.Flatten()(pool2)
+    # dense1 = layers.Dense(128, activation='relu')(flat1)
+    # dense2 = layers.Dense(NUM_CATEGORIES, activation='softmax')(dense1)
+    #
+    # model = models.Model(img_input, dense2)
 
     # accuracy shows how many guesses of the training dataset were correct
     # accuracy hopefully improving by repeating the process of gradient descent
