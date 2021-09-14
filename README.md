@@ -2,6 +2,10 @@
 
 *subwAI* - a project for creating an AI that plays the endless runner Subway Surfers.
 
+I made use of a supervised machine learning approach. I provided the ground truth data by playing the game and saving images with the corresponding action that was taken during the respective frame (jump, roll, left, right, noop) and in order for the AI to best imitate my playing style I used a convolutional neural network (CNN) with several layers (convolution, average pooling, dense layer, dropout, output), which gave me a good accuracy of 85% for it's predictions. After augmenting the data (mirroring, which resulted in a dataset twice as big) the model seemed to give even more robust results, when letting it play the game. Ultimately the model managed to many runs of over a minute and it safely handles the usual obstacles seen in the game. Moreover, the AI - with it's unconvential behavior - discovered a game-changing glitch.
+
+More on all this can be seen in my video on [YouTube](https://www.youtube.com/channel/UCV3IJuY11hfmjDomu6rEWTg).
+
 ## Description
 
 This repository contains everything that is needed for building an AI that plays Subway Surfers.
@@ -20,18 +24,7 @@ Also...
 
 [![Thumbnail](media/thumb6.png)](https://youtu.be/W6qyRbmr_aA)
 
-Click [here](https://youtu.be/W6qyRbmr_aA), to see what I did in this project on YouTube.
-
-Download the full project on [itch.io](https://nikp06.itch.io/icyai-icy-tower-ai-vs-human) (only Windows for now/I would appreciate someone making a mac or linux build and sending it to me :P -> I used pyinstaller on my windows machine).
-
-I made use of a genetic algorithm called NEAT. NEAT evolves neural network topologies through neuroevolution.
-It is a known method from the domain of reinforcement learning. The concept is further explained in the video. You can also read the initial [NEAT paper](http://nn.cs.utexas.edu/downloads/papers/stanley.cec02.pdf) or browse through the [NEAT documentation](https://neat-python.readthedocs.io/en/latest/neat_overview.html).
-This repository contains all files needed to train the AI for yourself.
-
 ![AI during training](media/training.gif)
-
-you need to play the game for yourself or to train your own Icy Tower AI.
-Feel free to play around with the configuration file. Maybe you'll find a way to make the AI learn even more complex behavior. I'd be curious to know about it in case you do.
 
 ## How to use
 
