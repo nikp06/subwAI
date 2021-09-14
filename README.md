@@ -10,7 +10,7 @@ More on all this can be seen in my [video](https://www.youtube.com/channel/UCV3I
 
 This repository contains everything that is needed for building an AI that plays Subway Surfers.
 With the provided scripts you can...
-- build a dataset by playing the game while running ``` py ai.py gather ``` (takes rapid screenshots of the game and saves images in respective folders ['down', 'left', 'noop', 'right', 'up']); press 'q' or 'esc' to quit
+- build a dataset by playing the game while running ``` py ai.py gather ``` (takes rapid screenshots of the game and saves images in respective folders ['down', 'left', 'noop', 'right', 'up'] in the folder 'images'); press 'q' or 'esc' to quit
 - train the specified model defined in get_model() on existing dataset running ``` py ai.py train ```; add ``` load <image_width> ``` to use a preloaded dataset for the respective image_width provided it has been saved before
 - augment the existing dataset by flipping every image and adjust the label (flipped image in 'left' needs to be changed to 'right') by running ``` py dataset_augmentation.py ```
 - have a look at what your trained model is doing under the hood with ``` py image_check.py ``` to see individual predictions for images and change labels when needed (press 'y' to move on to next image; 'n' to delete image; 'w' to move image to 'up'-folder; 'a' to move image to 'left'-folder; 's' to move image to 'down'-folder; 'd' to move image to 'right'-folder)
