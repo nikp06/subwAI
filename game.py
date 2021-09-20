@@ -15,10 +15,8 @@ import random
 
 PATH_TO_GAME = 'C:\\Program Files\\WindowsApps\\' \
                '16925JeuxjeuxjeuxGames.SubwaySurfersOriginalFree_1.0.0.0_x64__66k318ytnjhfe\\app\\app.exe'
-# GAME = {"top": 80, "left": 570, "width": 640, "height": 640}
-# MONITOR = {"top": 0, "left": 0, "width": 1920, "height": 1080}
+
 GAME = {"top": 150, "left": 570, "width": 750, "height": 750}
-# PAUSE = {"top": 80, "left": 260, "width": 60, "height": 50}
 PAUSE = {"top": 10, "left": 15, "width": 60, "height": 60}
 PATH_TO_IMAGES = 'images\\training'
 
@@ -75,6 +73,9 @@ class Game:
         time.sleep(5)
 
     def disable_wifi(self):
+        """
+        Disable Wifi before playing to avoid ads.
+        """
         if input("Please disable WIFI and enter 'y': ") == 'y':
             print("WIFI disabled")
         else:
@@ -82,6 +83,9 @@ class Game:
             self.disable_wifi()
 
     def start_game(self):
+        """
+        For making the mouse-clicks necessary to start the game.
+        """
         # self.disable_wifi()
         self.game_active = True
         pyautogui.moveTo(1, 1)
@@ -96,21 +100,12 @@ class Game:
         self.out = cv2.VideoWriter(self.out_name, fourcc, frame_rate, (frame_width, frame_height))
         self.game_start = time.time()
         self.intro = True
-        # click_location = None
-        # while not click_location:
-        #     try:
-        #
-        #         click_location = pyautogui.center(pyautogui.locateOnScreen('start_game.png'))
-        #         print("try")
-        #         pyautogui.moveTo(1, 1)
-        #         print(click_location)
-        #         self.game_active = True
-        #         pyautogui.click(click_location)
-        #     except:
-        #         print("failed")
-        #         click_location = None
 
     def check_game_state(self):
+        """
+        Called when game is over (when pause-button is not visible anymore). Makes necessary mouse-clicks
+        to start next run.
+        """
         images = ['images/buttons/save_me4.png', 'images/buttons/play_button4.png', 'images/buttons/prizes.png']
         while not self.game_active:
             click_location = None
@@ -146,6 +141,10 @@ class Game:
                         click_location = None
 
     def get_next_state(self, key, last_frame):
+        """
+        Grabs next frame, saves it if in gathering-mode
+        and checks if pause-button is still visible (if not, game is over).
+        """
         if keyboard.is_pressed('esc') or keyboard.is_pressed('q'):
             print("Terminating...")
             self.out.release()
@@ -155,16 +154,11 @@ class Game:
         path = 'images/training'
 
         with mss.mss() as sct:
-            # monitor = np.array(sct.grab(MONITOR))
 
             img_game = sct.grab(GAME)
-            # monitor = cv2.cvtColor(img_game, cv2.COLOR_RGB2BGR)
-            # frame = cv2.cvtColor(monitor, cv2.COLOR_BGR2RGB)
-            # img_game = monitor[150:900][570:1320]
 
             img_pause = sct.grab(PAUSE)
-            # img_pause = monitor[10:70][15:75]
-            # PAUSE = {"top": 10, "left": 15, "width": 60, "height": 60}
+
             if self.model is None:
                 if not self.frame_history:
                     self.frame_history = [img_game, img_game, img_game, img_game]
@@ -203,26 +197,15 @@ class Game:
                     print(f'{self.last_key} deleted')
                     self.im_counter[self.last_key] -= 1
                 print("stopping game!")
-            # self.out.release()
-            #
-            # if input("To keep recording enter 'y': ") == 'y':
-            #     print("Recording saved")
-            # else:
-            #     os.remove(self.out_name)
-            #     print("Recording not saved")
-
-            # self.out_name = VIDEO_PATH+time.strftime("%Y%m%d-%H%M%S")+'.avi'
-            # self.out = cv2.VideoWriter(self.out_name, fourcc, frame_rate, (frame_width, frame_height))
-        # else:
-        #     cv2.putText(frame, "FPS: %f" % (1.0 / (time.time() - self.last_time)),
-        #                 (10, 10),  cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        #     self.last_time = time.time()
-        #     self.out.write(frame)
 
         # return img_game[0] in case of perceptron maybe as it performs much faster and therefore is too quick
         return img_game
 
     def screen_cap(self, frame, action):
+        """
+        Screen recorder with frames that AI is seeing with action and FPS imprinted to individual video-frames.
+        Necessary, when external screen recording drastically reduces FPS.
+        """
         # monitor = cv2.cvtColor(img_game, cv2.COLOR_RGB2BGR)
         # frame = cv2.cvtColor(monitor, cv2.COLOR_BGR2RGB)
 
@@ -252,16 +235,8 @@ class Game:
                         if (time.time() - last_time) > 5:
                             print("Recording saved")
                             break
-                # if input("To keep recording enter 'y': ") == 'y':
-                #     print("Recording saved")
-                # else:
-                #     os.remove(self.out_name)
-                #     print("Recording not saved")
-
-                # self.out_name = VIDEO_PATH+time.strftime("%Y%m%d-%H%M%S")+'.avi'
-                # self.out = cv2.VideoWriter(self.out_name, fourcc, frame_rate, (frame_width, frame_height))
                 return
-        # else:
+
         cv2.putText(frame, "FPS: %f" % (1.0 / (time.time() - self.last_time)),
                     (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3)
         color = (0, 255, 0) if action != 'noop' else (255, 0, 0)
@@ -270,9 +245,15 @@ class Game:
         return
     
     def timer(self):
+        """
+        Updating time.
+        """
         self.last_time = time.time()
 
     def get_prediction(self, frame):
+        """
+        Converting the frame to be passed into the CNN for calling a prediction, which action to take next.
+        """
         img = Image.frombytes("RGB", frame.size, frame.bgra, "raw", "BGRX")
         img = np.array(img)
         img = img[:, :, ::-1].copy()
@@ -292,6 +273,9 @@ class Game:
         return predictions, cap
 
     def take_action(self, action):
+        """
+        For executing the predicted action.
+        """
         print(action)
         if action == 'noop':
             return
@@ -299,16 +283,10 @@ class Game:
         time.sleep(0.01)
         keyboard.release(action)
 
-        # if action[0] == 1:
-        #     keyboard.press('left')
-        # elif action[1] == 1:
-        #     keyboard.press('right')
-        # elif action[2] == 1:
-        #     keyboard.press('up')
-        # elif action[3] == 2:
-        #     keyboard.press('down')
-
     def listen(self):
+        """
+        For registering the actions taken in gathering mode.
+        """
         key = 'noop'
         key_pressed = False
         if keyboard.is_pressed('left') and not self.left:
@@ -357,11 +335,17 @@ class Game:
         return key
 
     def mse(self, image_a, image_b):
+        """
+        For comparing images for similarity.
+        """
         err = np.sum((image_a.astype("float") - image_b.astype("float")) ** 2)
         err /= float(image_a.shape[0] * image_a.shape[1])
         return err
 
     def compare_images(self, image_a, image_b):
+        """
+        For comparing images for similarity.
+        """
         m = self.mse(image_a, image_b)
         s = ssim(image_a, image_b)
         return m, s

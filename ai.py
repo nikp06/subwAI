@@ -52,15 +52,11 @@ def main():
 
 
 def train_on_data():
-    # Get image arrays and labels for all image files
-    # if len(sys.argv) > 2:
-    #     if sys.argv[2] == 'load':
-    #         images = np.load('images.npy')
-    #         labels = np.load('labels.npy')
-    # else:
+    """
+    Trains a convolutional neural networks (or others if specified in models) according to layer-specification
+    in get_model().
+    """
     pixels, images, labels = load_data()
-    #     np.save('images.npy', np.array(images))
-    #     np.save('labels.npy', np.array(labels))
 
     labels = tf.keras.utils.to_categorical(labels)
     # Split data into training and testing sets
@@ -143,6 +139,9 @@ def train_on_data():
 
 
 def gather_training_data():
+    """
+    Starts playing loop and saves individual frames into respective folders depending on actions taken.
+    """
     game = Game()
     game.disable_wifi()
     game.start_game()
@@ -153,9 +152,7 @@ def gather_training_data():
         while game.game_active:
             if game.intro:
                 game.intro = (game.last_time - game.game_start) < 1.5
-            # if counter % 4 == 0:
-                # print("--- %s seconds ---" % (time.time() - start_time))
-                # start_time = time.time()
+
             counter += 1
             key = game.listen()
             frame = game.get_next_state(key, last_frame=frame)
@@ -164,6 +161,9 @@ def gather_training_data():
 
 
 def let_ai_play():
+    """
+    Loads saved model and starts playing loop with model making predictions for individual frames.
+    """
     game = Game()
     game.disable_wifi()
     # [KNeighborsClassifier(n_neighbors=5), tf.keras.models.Sequential(), GaussianNB(), Perceptron()]
@@ -189,8 +189,7 @@ def let_ai_play():
         while game.game_active:
             if game.intro:
                 game.intro = (game.last_time - game.game_start) < 1.5
-            #     print(game.last_time - game.game_start)
-            # print(game.intro)
+
             frame = game.get_next_state(key, frame)
             # start_time = time.time()
             predictions, cap = game.get_prediction(frame)
@@ -203,9 +202,6 @@ def let_ai_play():
 
             # if round(max(predictions[0]), 2) > 0.98:
 
-            # else:
-            #     action = None
-            # if action == 'left' or action == 'right':
             if last_action != action:
                 if action == 'down' and jump:
                     action = 'noop'
@@ -219,24 +215,21 @@ def let_ai_play():
                 if jump and (game.last_time-jump_start) > 1:
                     jump = False
                     
+                # frame rate
                 # print("--- %s seconds ---" % (time.time() - start_time))
-                # if action != 'noop':
+                
             print("{} with {:.2f} percent certainty" .format(action, 100 * np.max(score)))
             last_action = action if action == 'left' or action == 'right' else 'noop'
 
             # print("This image most likely belongs to {} with a {:.2f} percent confidence.\n"
             #       .format(action, 100 * np.max(score)))
 
-            # game.screen_cap(cap, action)
+            game.screen_cap(cap, action)
             game.last_time = time.time()
             
-            # game.timer()
+            game.timer()
 
         game.check_game_state()
-
-
-# def timer():
-#     return time.time()
 
 
 def load_data():

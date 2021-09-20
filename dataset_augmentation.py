@@ -1,6 +1,11 @@
 from PIL import Image
 import os
 
+"""
+Script for flipping all training images horizontally in order to double the size of the training set.
+Changes labels accordingly if necessary (left flipped -> right).
+"""
+
 PATH_TO_IMAGES = 'images\\training2'
 images = []
 labels = []
