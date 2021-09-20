@@ -6,6 +6,8 @@ For this project, I made use of a supervised machine learning approach. I provid
 
 More on all this can be seen in my [video](https://www.youtube.com/channel/UCV3IJuY11hfmjDomu6rEWTg) on YouTube.
 
+[![thumb4](https://user-images.githubusercontent.com/64498892/133990328-901eda97-f790-4d8f-8a6c-a87a7ec4189a.png)](https://youtu.be/W6qyRbmr_aA)
+
 ## Description/Usage
 
 This repository contains everything that is needed for building an AI that plays Subway Surfers.
@@ -22,4 +24,3 @@ Also...
 - in the folder 'models' your trained models are saved; while the Sequential() model (convolutional neural network with layers defined in get_model()) gives the best results you can also try other more simplistic machine learning models such as [KNeighborsClassifier(n_neighbors=5), GaussianNB(), Perceptron()]
 - visualizations of the CNN-architecture and details regarding layer configurations as well as the accuracy and loss of the model is saved in models\Sequential
 
-[![thumb4](https://user-images.githubusercontent.com/64498892/133990328-901eda97-f790-4d8f-8a6c-a87a7ec4189a.png)](https://youtu.be/W6qyRbmr_aA)
