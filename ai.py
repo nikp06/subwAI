@@ -23,7 +23,7 @@ else:
 NUM_CATEGORIES = 5
 TEST_SIZE = 0.3
 
-PATH_TO_IMAGES = 'images\\training2'
+PATH_TO_IMAGES = 'images\\training'
 ACTIONS2IDX = {
     'left': 0,
     'right': 1,
@@ -196,7 +196,7 @@ def let_ai_play():
             predictions, cap = game.get_prediction(frame)
 
             if game.NN:
-                # score = tf.nn.softmax(predictions[0])  # get logits
+                score = tf.nn.softmax(predictions[0])  # get logits
                 action = game.actions[np.argmax(predictions)]   # if np.amax(predictions) > 0.7 else 'noop'
             else:
                 action = game.actions[predictions[0]]
@@ -221,13 +221,13 @@ def let_ai_play():
                     
                 # print("--- %s seconds ---" % (time.time() - start_time))
                 # if action != 'noop':
-                #     print("{} with {:.2f} percent certainty" .format(action, 100 * np.max(score)))
+            print("{} with {:.2f} percent certainty" .format(action, 100 * np.max(score)))
             last_action = action if action == 'left' or action == 'right' else 'noop'
 
             # print("This image most likely belongs to {} with a {:.2f} percent confidence.\n"
             #       .format(action, 100 * np.max(score)))
 
-            game.screen_cap(cap, action)
+            # game.screen_cap(cap, action)
             game.last_time = time.time()
             
             # game.timer()

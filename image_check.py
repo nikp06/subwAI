@@ -21,7 +21,7 @@ path = os.path.join('models', 'Sequential')
 model = tf.keras.models.load_model(path+'_whole_set')
 actions = ['left', 'right', 'up', 'down', 'noop']
 skip = ['noop', 'left', 'down', 'right']
-check = ['noop']
+check = ['left', 'right', 'up', 'down', 'noop']
 
 for i, folder in enumerate(os.listdir(PATH_TO_IMAGES)):
 	folder_path = os.path.join(PATH_TO_IMAGES, str(folder))
@@ -29,6 +29,8 @@ for i, folder in enumerate(os.listdir(PATH_TO_IMAGES)):
 	if folder not in check:
 		continue
 	for j, image in enumerate(copy.deepcopy(images)):
+		if j == 1:
+			break
 		im = cv2.imread(os.path.join(folder_path, image))
 		im_small = cv2.resize(im, (96, 96), interpolation=cv2.INTER_AREA)
 		im_small = tf.keras.preprocessing.image.img_to_array(im_small)[:, :, :3]  # convert image to array

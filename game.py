@@ -20,7 +20,7 @@ PATH_TO_GAME = 'C:\\Program Files\\WindowsApps\\' \
 GAME = {"top": 150, "left": 570, "width": 750, "height": 750}
 # PAUSE = {"top": 80, "left": 260, "width": 60, "height": 50}
 PAUSE = {"top": 10, "left": 15, "width": 60, "height": 60}
-PATH_TO_IMAGES = 'images\\training2'
+PATH_TO_IMAGES = 'images\\training'
 
 frame_width = 750
 frame_height = 750
@@ -152,7 +152,7 @@ class Game:
             os.remove(self.out_name)
             time.sleep(2)
             sys.exit("Terminating Program")
-        path = 'images/training2'
+        path = 'images/training'
 
         with mss.mss() as sct:
             # monitor = np.array(sct.grab(MONITOR))
@@ -189,7 +189,7 @@ class Game:
 
                         mss.tools.to_png(self.frame_history[0].rgb, self.frame_history[0].size,
                                          output=os.path.join(path, key, str(nr)+'.png'))
-                        print(f'{key} saved')
+                        print(f"image saved in {key} folder")
 
         ret, thresh1 = cv2.threshold(cv2.cvtColor(np.array(img_pause),
                                                   cv2.COLOR_BGRA2GRAY), 127, 255, cv2.THRESH_BINARY)
@@ -292,6 +292,7 @@ class Game:
         return predictions, cap
 
     def take_action(self, action):
+        print(action)
         if action == 'noop':
             return
         keyboard.press(action)
