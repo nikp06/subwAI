@@ -24,3 +24,5 @@ Also...
 - in the folder 'models' your trained models are saved; while the Sequential() model (convolutional neural network with layers defined in get_model()) gives the best results you can also try other more simplistic machine learning models such as [KNeighborsClassifier(n_neighbors=5), GaussianNB(), Perceptron()]
 - visualizations of the CNN-architecture and details regarding layer configurations as well as the accuracy and loss of the model is saved in models\Sequential
 
+![ezgif com-gif-maker](https://user-images.githubusercontent.com/64498892/133991005-83309bec-ec01-4ea2-9a0e-20ccb7af73a6.gif)
+
