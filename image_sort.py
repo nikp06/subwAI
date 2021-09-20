@@ -1,5 +1,10 @@
 import os
 
+"""
+Script for quickly sorting training images and restoring order in case the original order is not kept anymore.
+E.g. after changing labels of certain images in image_check.py.
+"""
+
 PATH_TO_IMAGES = 'images\\training2'
 images = []
 labels = []

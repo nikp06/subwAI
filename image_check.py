@@ -5,6 +5,18 @@ import sys
 import tensorflow as tf
 import numpy as np
 
+"""
+Script for checking what a trained model is predicting for individual images from the training data along with
+the respective certainty of the prediction.
+Also for double-ckecking in case player made wrong actions in certain situations during gathering of training data.
+Press 'y' to move on to next image.
+Press 'n' to delete image.
+Press 'w' to move image to 'up' folder.
+Press 'a' to move image to 'left' folder.
+Press 's' to move image to 'down' folder.
+Press 'd' to move image to 'right' folder.
+"""
+
 PATH_TO_IMAGES = 'images\\training2'
 
 # keys
@@ -18,10 +30,10 @@ d = 100
 keys = [115, 97, 0, 100, 119]  # ['down', 'left', 'noop', 'right', 'up'] -> order in which it is read
 
 path = os.path.join('models', 'Sequential')
-model = tf.keras.models.load_model(path+'_whole_set')
+model = tf.keras.models.load_model(path)
 actions = ['left', 'right', 'up', 'down', 'noop']
 skip = ['noop', 'left', 'down', 'right']
-check = ['noop']
+check = ['left', 'right', 'up', 'down', 'noop']
 
 for i, folder in enumerate(os.listdir(PATH_TO_IMAGES)):
 	folder_path = os.path.join(PATH_TO_IMAGES, str(folder))
@@ -29,6 +41,8 @@ for i, folder in enumerate(os.listdir(PATH_TO_IMAGES)):
 	if folder not in check:
 		continue
 	for j, image in enumerate(copy.deepcopy(images)):
+		if j == 1:
+			break
 		im = cv2.imread(os.path.join(folder_path, image))
 		im_small = cv2.resize(im, (96, 96), interpolation=cv2.INTER_AREA)
 		im_small = tf.keras.preprocessing.image.img_to_array(im_small)[:, :, :3]  # convert image to array
